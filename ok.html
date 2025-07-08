@@ -1,0 +1,165 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cyber Defense Platform</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+    }
+    header {
+      background-color: #000;
+      padding: 40px 20px;
+      text-align: center;
+      box-shadow: 0 0 20px #00ffe7;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: #00ffe7;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      background-color: #101820;
+      padding: 10px;
+    }
+    nav a {
+      color: #00ffe7;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    section {
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+    .card {
+      background: #121f2f;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 15px rgba(0, 255, 231, 0.3);
+    }
+    .card h2 {
+      color: #00ffe7;
+      margin-top: 0;
+    }
+    input[type="email"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 12px 25px;
+      background-color: #00ffe7;
+      color: #000;
+      border: none;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 15px;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: #000;
+      color: #aaa;
+      font-size: 14px;
+    }
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 20px;
+      }
+      nav {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Intelligent Cyber Defense & Intelligence Platform</h1>
+  </header>
+
+  <nav>
+    <a href="#about">About</a>
+    <a href="#email-checker">Email Scanner</a>
+    <a href="#detection">Threat Detection</a>
+  </nav>
+
+  <section id="about" class="card">
+    <h2>🔐 About This Platform</h2>
+    <p>This platform is designed to showcase real-time cyber defense and intelligence capabilities. Built for internship-level research, it simulates email data breach scanning and threat monitoring using modern front-end technologies.</p>
+  </section>
+
+  <section id="email-checker" class="card">
+    <h2>📧 Email Breach Scanner</h2>
+    <p>Check if your email is involved in any known data breaches. (Simulated check)</p>
+    <input type="email" id="email" placeholder="Enter your email" />
+    <button onclick="checkBreach()">Scan Now</button>
+    <div class="result" id="result"></div>
+  </section>
+
+  <section id="detection" class="card">
+    <h2>🛡️ Live Threat Detection</h2>
+    <p>Simulates detection of incoming cyber threats using AI-based logic.</p>
+    <button onclick="simulateThreat()">Run Simulation</button>
+    <div class="result" id="threatLog"></div>
+  </section>
+
+  <footer>
+    © 2025 Cyber Defense Intern Project by Amlan Das
+  </footer>
+
+  <script>
+    function checkBreach() {
+      const email = document.getElementById("email").value;
+      const result = document.getElementById("result");
+      if (!email) {
+        result.innerHTML = "<span style='color: red;'>❌ Please enter a valid email address.</span>";
+        return;
+      }
+      result.innerHTML = "🔍 Scanning...";
+      setTimeout(() => {
+        const isBreached = Math.random() < 0.5;
+        if (isBreached) {
+          result.innerHTML = `<span style="color: red;">⚠️ Breach Found! Your email (${email}) was exposed in a recent data breach. Change your password now!</span>`;
+        } else {
+          result.innerHTML = `<span style="color: lightgreen;">✅ No breach detected for ${email}. You're safe!</span>`;
+        }
+      }, 2000);
+    }
+
+    function simulateThreat() {
+      const log = document.getElementById("threatLog");
+      const threats = [
+        "🚨 DDoS attack detected from IP 185.23.44.11",
+        "🚨 Brute-force attempt on admin login",
+        "🚨 Suspicious download of malware signature",
+        "🚨 Anomaly in outbound traffic patterns",
+        "🚨 Ransomware alert blocked by firewall"
+      ];
+      const random = threats[Math.floor(Math.random() * threats.length)];
+      log.innerHTML = `<span style="color: orange;">${random}</span>`;
+    }
+  </script>
+</body>
+</html>
