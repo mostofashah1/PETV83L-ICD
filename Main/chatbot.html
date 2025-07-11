@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICD</title>
+    
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the chatbot */
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter font as per instructions */
+            margin: 0;
+            padding: 20px; /* Add some padding around the main content */
+            background-color: #f0f2f5;
+            display: flex; /* Use flexbox to center the chatbot */
+            flex-direction: column; /* Stack items vertically */
+            justify-content: flex-start; /* Align to the top of the page */
+            align-items: center; /* Center horizontally */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+        }
+
+        /* Chatbot container - now a direct block on the page */
+        .chatbot-container {
+            width: 100%; /* Take full width of its parent (which is centered) */
+            max-width: 600px; /* Max width for larger screens */
+            height: 600px; /* Fixed height for the chat window */
+            display: flex; /* Always visible */
+            flex-direction: column;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            overflow: hidden; /* Hide overflow content */
+            z-index: 1000;
+        }
+
+        /* Chatbot header */
+        .chatbot-header {
+            background-color: #4f46e5; /* Indigo 600 */
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            font-weight: bold;
+        }
+
+        /* Credit line styling - now inside the chatbot container */
+        .credit-line {
+            padding: 10px 16px 0px; /* Padding to align with chat messages, reduce bottom padding */
+            text-align: center;
+            font-size: 0.9rem; /* Slightly smaller for internal placement */
+            color: #6b7280; /* Gray 500 */
+            background-color: #e2e8f0; /* Light gray background */
+            /* border-bottom: 1px solid #cbd5e1; Removed border-bottom here */
+        }
+
+        /* New academic info line styling */
+        .academic-info {
+            padding: 0px 16px 10px; /* Padding to align, reduce top padding */
+            text-align: center;
+            font-size: 0.8rem; /* Smaller than credit line */
+            color: #94a3b8; /* Slate 400, slightly lighter */
+            background-color: #e2e8f0; /* Match background */
+            border-bottom: 1px solid #cbd5e1; /* Border below academic info */
+        }
+
+        /* API Key input area styling */
+        .api-key-input-area {
+            padding: 10px 16px;
+            background-color: #f0f4f8; /* Lighter background for this section */
+            border-bottom: 1px solid #cbd5e1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .api-key-input-area input[type="text"] {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.9rem;
+            min-width: 180px; /* Ensure input is not too small */
+        }
+
+        .api-key-input-area button {
+            background-color: #10b981; /* Emerald 500 for save button */
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .api-key-input-area button:hover {
+            background-color: #059669; /* Emerald 600 */
+        }
+
+
+        /* Chat messages area */
+        .chat-messages {
+            flex-grow: 1; /* Allows it to take available space */
+            padding: 16px;
+            overflow-y: auto; /* Enable vertical scrolling */
+            scroll-behavior: smooth; /* Smooth scrolling for new messages */
+            background-color: #f9fafb;
+        }
+
+        /* Individual message styling */
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0; /* Prevent icon from shrinking */
+        }
+
+        .user-message .message-icon {
+            background-color: #6366f1; /* Indigo 500 */
+            margin-left: 8px; /* Space from message bubble */
+            order: 2; /* Puts icon on the right for user */
+        }
+
+        .bot-message .message-icon {
+            background-color: #10b981; /* Emerald 500 */
+            margin-right: 8px; /* Space from message bubble */
+            order: 1; /* Puts icon on the left for bot */
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            line-height: 1.4;
+            word-wrap: break-word; /* Ensure long words wrap */
+        }
+
+        .user-message .message-bubble {
+            background-color: #e0e7ff; /* Indigo 100 */
+            color: #1e293b; /* Slate 800 */
+            margin-left: auto; /* Pushes user message to the right */
+            border-bottom-right-radius: 4px; /* Slight corner adjustment */
+        }
+
+        .bot-message .message-bubble {
+            background-color: #d1fae5; /* Emerald 100 */
+            color: #1e293b; /* Slate 800 */
+            margin-right: auto; /* Pushes bot message to the left */
+            border-bottom-left-radius: 4px; /* Slight corner adjustment */
+        }
+
+        /* Input area */
+        .chat-input-area {
+            padding: 16px;
+            border-top: 1px solid #e5e7eb; /* Gray 200 */
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            justify-content: flex-end; /* Align items to the right */
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db; /* Gray 300 */
+            border-radius: 20px;
+            outline: none;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            min-width: 150px; /* Ensure input doesn't get too small */
+        }
+
+        .chat-input:focus {
+            border-color: #4f46e5; /* Indigo 600 */
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        .send-button {
+            background-color: #4f46e5; /* Indigo 600 */
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+            white-space: nowrap; /* Prevent text from wrapping */
+        }
+
+        .send-button:hover {
+            background-color: #4338ca; /* Indigo 700 */
+            transform: translateY(-1px);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        /* Loading indicator */
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #6b7280; /* Gray 500 */
+            font-style: italic;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .chatbot-container {
+                width: 100%; /* Full width on small screens */
+                max-width: none; /* Remove max-width constraint */
+                height: 95vh; /* Use almost full viewport height */
+                border-radius: 0; /* No rounded corners on full screen */
+                box-shadow: none; /* No shadow on full screen */
+            }
+
+            body {
+                padding: 0; /* Remove body padding on small screens */
+                align-items: stretch; /* Stretch chatbot to fill height */
+            }
+
+            .credit-line {
+                font-size: 0.8rem; /* Even smaller for mobile internal */
+                padding: 8px 16px 0px; /* Adjust padding */
+            }
+
+            .academic-info {
+                font-size: 0.7rem; /* Even smaller for mobile internal */
+                padding: 0px 16px 8px; /* Adjust padding */
+            }
+
+            .api-key-input-area {
+                flex-direction: column; /* Stack vertically on small screens */
+                align-items: stretch;
+            }
+
+            .api-key-input-area input[type="text"] {
+                width: 100%; /* Full width input */
+                min-width: unset; /* Remove min-width constraint */
+            }
+
+            .api-key-input-area button {
+                width: 100%; /* Full width button */
+            }
+
+            .chat-input-area {
+                flex-direction: column; /* Stack input and buttons vertically */
+                align-items: stretch; /* Stretch items to full width */
+            }
+
+            .chat-input {
+                width: 100%; /* Full width input */
+                margin-bottom: 10px; /* Space below input */
+            }
+
+            .send-button {
+                width: 100%; /* Full width buttons */
+                margin-bottom: 5px; /* Space between buttons */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Chatbot Container - now directly visible -->
+    <div id="chatbotContainer" class="chatbot-container">
+        <!-- Chatbot Header -->
+        <div class="chatbot-header">
+            <span>Cybersecurity Chatbot</span>
+        </div>
+
+        <!-- Credit Line -->
+        <div class="credit-line">
+            Made by Amlan Das, Mostofa Shah, Kavya Gupta
+        </div>
+
+        <!-- Academic Info Line -->
+        <div class="academic-info">
+            B.Tech Computer Science and Engineering. Lovely Professional University <br>
+            AIzaSyB73sp3FTDdk9gVI0iRm7bQraea0vwKQTg
+        </div>
+
+        <!-- API Key Input Area -->
+        <div class="api-key-input-area">
+            <input type="text" id="apiKeyInput" placeholder="Enter your Gemini API Key">
+            <button id="saveApiKeyButton">Save API Key</button>
+        </div>
+
+        <!-- Chat Messages Display Area -->
+        <div id="chatMessages" class="chat-messages">
+            <!-- Initial bot message -->
+            <div class="message bot-message">
+                <div class="message-icon">🤖</div>
+                <div class="message-bubble">Hello! I'm your cybersecurity assistant. Ask me anything about cybersecurity!</div>
+            </div>
+            <!-- Messages will be appended here -->
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-indicator">
+            Thinking...
+        </div>
+
+        <!-- Chat Input Area -->
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your question...">
+            <button id="sendMessageButton" class="send-button">Send</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Get references to DOM elements
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendMessageButton = document.getElementById('sendMessageButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const apiKeyInput = document.getElementById('apiKeyInput'); // New API key input field
+        const saveApiKeyButton = document.getElementById('saveApiKeyButton'); // New Save API Key button
+
+        // Array to store chat history for the API
+        let chatHistory = [];
+
+        // Function to load API key from localStorage
+        function loadApiKey() {
+            const storedKey = localStorage.getItem('geminiApiKey');
+            if (storedKey) {
+                apiKeyInput.value = storedKey;
+                addMessageToChat('bot', 'API Key loaded from local storage. You can now chat!');
+            } else {
+                addMessageToChat('bot', 'Please enter your Gemini API Key above to start chatting.');
+            }
+        }
+
+        // Function to save API key to localStorage
+        function saveApiKey() {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem('geminiApiKey', key);
+                addMessageToChat('bot', 'API Key saved successfully!');
+            } else {
+                addMessageToChat('bot', 'API Key cannot be empty. Please enter a valid key.');
+            }
+        }
+
+        // Add initial bot message to chat history
+        chatHistory.push({ role: "model", parts: [{ text: "Hello! I'm your cybersecurity assistant. Ask me anything about cybersecurity!" }] });
+
+        /**
+         * Adds a message to the chat display.
+         * @param {string} sender - 'user' or 'bot'.
+         * @param {string} text - The message content.
+         */
+        function addMessageToChat(sender, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+
+            const iconDiv = document.createElement('div');
+            iconDiv.classList.add('message-icon');
+            iconDiv.textContent = sender === 'user' ? '👤' : '🤖';
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.classList.add('message-bubble');
+            bubbleDiv.textContent = text;
+
+            if (sender === 'user') {
+                messageDiv.appendChild(bubbleDiv);
+                messageDiv.appendChild(iconDiv);
+            } else {
+                messageDiv.appendChild(iconDiv);
+                messageDiv.appendChild(bubbleDiv);
+            }
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the latest message
+        }
+
+        /**
+         * Disables/enables input and buttons, shows/hides loading indicator.
+         * @param {boolean} isLoading - True to show loading state, false to hide.
+         */
+        function setLoadingState(isLoading) {
+            sendMessageButton.disabled = isLoading;
+            chatInput.disabled = isLoading;
+            apiKeyInput.disabled = isLoading; // Disable API key input while loading
+            saveApiKeyButton.disabled = isLoading; // Disable save button while loading
+            loadingIndicator.style.display = isLoading ? 'block' : 'none';
+            if (isLoading) {
+                chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to show loading
+            }
+        }
+
+        /**
+         * Sends a message to the Gemini API and displays the response.
+         * @param {string} userPrompt - The user's actual prompt (what they typed or requested).
+         */
+        async function sendToGeminiAPI(userPrompt) {
+            const currentApiKey = apiKeyInput.value.trim();
+            if (!currentApiKey) {
+                addMessageToChat('bot', 'Error: Please enter your Gemini API Key before sending messages.');
+                return;
+            }
+
+            setLoadingState(true);
+
+            // Add the user's prompt to chat history before sending
+            chatHistory.push({ role: "user", parts: [{ text: userPrompt }] });
+
+            try {
+                const payload = { contents: chatHistory }; // Send entire chat history for context
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${currentApiKey}`; // Use the key from input
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Check if the response was successful (HTTP status 200-299)
+                if (!response.ok) {
+                    const errorText = await response.text(); // Read raw response for debugging
+                    console.error("API Response Error:", response.status, response.statusText, errorText);
+                    addMessageToChat('bot', `Error: Unable to get a response from the AI. Status: ${response.status}. Please try again.`);
+                    // Remove the last user message from history if API call failed
+                    chatHistory.pop(); // Remove the user message that caused the error
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const botResponse = result.candidates[0].content.parts[0].text;
+                    addMessageToChat('bot', botResponse);
+                    chatHistory.push({ role: "model", parts: [{ text: botResponse }] }); // Add bot's response to history
+                } else {
+                    addMessageToChat('bot', "Sorry, I couldn't get a valid response from the AI. Please try again.");
+                    console.error("Unexpected API response structure:", result);
+                    chatHistory.pop(); // Remove the user message that caused the error
+                }
+            } catch (error) {
+                console.error("Error fetching from Gemini API:", error);
+                addMessageToChat('bot', "Oops! Something went wrong. Please check your internet connection and try again.");
+                chatHistory.pop(); // Remove the user message that caused the error
+            } finally {
+                setLoadingState(false);
+                chatInput.focus();
+            }
+        }
+
+        /**
+         * Handles sending a regular chat message.
+         */
+        async function handleSendMessage() {
+            const userMessage = chatInput.value.trim();
+            if (userMessage === '') return;
+
+            addMessageToChat('user', userMessage); // Display user's message immediately
+            chatInput.value = ''; // Clear input field
+            await sendToGeminiAPI(userMessage);
+        }
+
+        // Event Listeners
+        sendMessageButton.addEventListener('click', handleSendMessage);
+        saveApiKeyButton.addEventListener('click', saveApiKey); // Event listener for save button
+
+        // Allow sending message with Enter key
+        chatInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                handleSendMessage();
+            }
+        });
+
+        // Load API key when the page loads
+        window.onload = loadApiKey;
+    </script>
+</body>
+</html>

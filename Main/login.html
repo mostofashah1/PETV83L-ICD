@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Login & Signup</title>
+
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      background: linear-gradient(120deg, #1cb5e0, #000851);
+      display: flex; justify-content: center; align-items: center;
+      height: 100vh; margin: 0;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.37);
+      padding: 40px;
+      width: 100%; max-width: 400px; color: #fff; display: none;
+    }
+    h2 { text-align: center; margin-bottom: 25px; font-size: 28px; }
+    input {
+      width: 100%; padding: 12px; margin: 10px 0;
+      border: none; border-radius: 10px;
+      background: rgba(255,255,255,0.1); color: #fff; font-size: 16px;
+    }
+    input::placeholder { color: #ccc; }
+    button {
+      width: 100%; padding: 12px; margin-top: 15px;
+      background-color: #00c6ff; border: none;
+      border-radius: 10px; color: white; font-weight: bold; font-size: 16px; cursor: pointer;
+    }
+    .link {
+      text-align: center; margin-top: 20px;
+      font-size: 14px; color: #e0e0e0; cursor: pointer;
+    }
+    .otp-box { display: none; }
+    .error {
+      color: #ffdddd; font-size: 14px; text-align: center; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Signup Form -->
+<div class="container" id="signupContainer">
+  <h2>Signup</h2>
+  <input type="text" id="signupName" placeholder="Full Name" required />
+  <input type="email" id="signupEmail" placeholder="Email" required />
+  <input type="password" id="signupPassword" placeholder="Password" required />
+  <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required />
+  <button onclick="handleSignup()">Signup</button>
+  <div class="link" onclick="showLogin()">Already have an account? Login</div>
+  <div class="error" id="signupError"></div>
+</div>
+
+<!-- Login Form -->
+<div class="container" id="loginContainer">
+  <h2>Login</h2>
+  <input type="email" id="loginEmail" placeholder="Email" required />
+  <input type="password" id="loginPassword" placeholder="Password" required />
+  <button onclick="handleLogin()">Login</button>
+  <div class="link" onclick="showSignup()">Don't have an account? Register</div>
+  <div class="error" id="loginError"></div>
+</div>
+
+<!-- OTP Verification -->
+<div class="container otp-box" id="otpBox">
+  <h2>Enter OTP</h2>
+  <input type="number" id="otpInput" placeholder="Enter OTP" required />
+  <button onclick="verifyOTP()">Verify OTP</button>
+  <div class="error" id="otpError"></div>
+</div>
+
+<script>
+  // ✅ Initialize EmailJS
+  emailjs.init("APVsmruV4he_1m8oR");
+
+  // ✅ Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmiqiKmOw6O_ICroPI3qbuKgdkxdKIAYM",
+    authDomain: "projectsop-99c64.firebaseapp.com",
+    databaseURL: "https://projectsop-99c64-default-rtdb.firebaseio.com",
+    projectId: "projectsop-99c64",
+    storageBucket: "projectsop-99c64.appspot.com",
+    messagingSenderId: "1016936746183",
+    appId: "1:1016936746183:web:d3ffef0dda0fde486242e2",
+    measurementId: "G-Q0DPHSZKC9"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  const allowedDomains = ["gmail.com", "outlook.com", "lpu.in", "ehow.com"];
+  let currentOTP = "", currentEmail = "", isSignup = false, currentUserData = {};
+
+  window.onload = showLogin;
+
+  function showLogin() {
+    document.getElementById("loginContainer").style.display = "block";
+    document.getElementById("signupContainer").style.display = "none";
+    document.getElementById("otpBox").style.display = "none";
+    clearErrors();
+  }
+
+  function showSignup() {
+    document.getElementById("signupContainer").style.display = "block";
+    document.getElementById("loginContainer").style.display = "none";
+    document.getElementById("otpBox").style.display = "none";
+    clearErrors();
+  }
+
+  function clearErrors() {
+    ["signupError","loginError","otpError"].forEach(id => document.getElementById(id).innerText = "");
+  }
+
+  function encodeEmail(email) {
+    return email.replace(/\./g, "_dot_");
+  }
+
+  function isValidEmailDomain(email) {
+    return allowedDomains.some(d => email.endsWith("@" + d));
+  }
+
+  function sendOTP(email) {
+    currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    emailjs.send("service_emn77yi", "template_tgystg9", {
+      email: email,
+      otp: currentOTP
+    }).then(() => {
+      document.getElementById("loginContainer").style.display = "none";
+      document.getElementById("signupContainer").style.display = "none";
+      document.getElementById("otpBox").style.display = "block";
+    }, err => {
+      alert("Failed to send OTP. Try again.");
+    });
+  }
+
+  function handleSignup() {
+    clearErrors();
+    const name = document.getElementById("signupName").value.trim();
+    const email = document.getElementById("signupEmail").value.trim();
+    const pass = document.getElementById("signupPassword").value;
+    const confirm = document.getElementById("signupConfirmPassword").value;
+
+    if (!isValidEmailDomain(email)) {
+      return document.getElementById("signupError").innerText = "Invalid email domain.";
+    }
+    if (pass !== confirm) {
+      return document.getElementById("signupError").innerText = "Passwords do not match.";
+    }
+
+    isSignup = true;
+    currentEmail = email;
+    currentUserData = { name, email, password: pass };
+    sendOTP(email);
+  }
+
+  function handleLogin() {
+    clearErrors();
+    const email = document.getElementById("loginEmail").value.trim();
+    const pass = document.getElementById("loginPassword").value;
+
+    firebase.database().ref("users/" + encodeEmail(email)).once('value')
+      .then(snapshot => {
+        if (!snapshot.exists()) {
+          document.getElementById("loginError").innerText = "User not found.";
+          return;
+        }
+        const userData = snapshot.val();
+        if (userData.password !== pass) {
+          document.getElementById("loginError").innerText = "Incorrect password.";
+          return;
+        }
+
+        isSignup = false;
+        currentEmail = email;
+        sendOTP(email);
+      })
+      .catch(error => {
+        document.getElementById("loginError").innerText = "Login error: " + error.message;
+      });
+  }
+
+  function verifyOTP() {
+    const otp = document.getElementById("otpInput").value.trim();
+    if (otp !== currentOTP) {
+      return document.getElementById("otpError").innerText = "Incorrect OTP.";
+    }
+
+    if (isSignup) {
+      firebase.database().ref("users/" + encodeEmail(currentEmail)).set(currentUserData)
+        .then(() => {
+          alert("Signup successful. Please login.");
+          showLogin();
+        })
+        .catch(err => alert("Firebase error: " + err));
+    } else {
+      alert("Login successful!");
+      window.location.href = "index.html";
+    }
+  }
+</script>
+
+</body>
+</html>
